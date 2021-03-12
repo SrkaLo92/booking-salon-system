@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { Container } from 'typedi';
 import AuthService from '../../services/AuthService';
-import { UserRegisterDTO } from '../../interfaces/User';
+import { UserLoginDTO, UserRegisterDTO } from '../../interfaces/User';
 import { celebrate, Joi } from 'celebrate';
-import asyncHandler from '../../util/async-handler';
-import passport from 'passport';
+import asyncHandler from '../../util/asyncHandler';
+import middlewares from '../middlewares';
 
 const route = Router();
 
@@ -36,11 +36,20 @@ export default (app: Router): void => {
                 password: Joi.string().required(),
             }),
         }),
-        passport.authenticate('local', { session: false }),
         asyncHandler(async (req: Request, res: Response) => {
             const authService = Container.get(AuthService);
-            const data = await authService.SignIn();
-            res.status(201).json(data);
+            const { email, password } = req.body as UserLoginDTO;
+            const token = await authService.SignIn(email, password);
+            res.status(201).json({ token });
+        }),
+    );
+
+    route.post(
+        '/signout',
+        middlewares.isAuth,
+        asyncHandler(async (req: Request, res: Response) => {
+            //@TODO AuthService.Logout(req.user) do some clever stuff
+            res.status(200).end();
         }),
     );
 };

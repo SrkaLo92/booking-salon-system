@@ -31,9 +31,11 @@ export default {
     /**
      * Your secret sauce
      */
-    jwtSecret: process.env.JWT_SECRET,
-    jwtAlgorithm: process.env.JWT_ALGO,
-
+    jwt: {
+        secret: process.env.JWT_SECRET,
+        algorithm: process.env.JWT_ALGO,
+        expirationDays: Number(process.env.JWT_EXP_DAYS),
+    },
     /**
      * Used by winston logger
      */
@@ -47,4 +49,6 @@ export default {
     api: {
         prefix: '/api',
     },
+
+    domain: process.env.DOMAIN,
 };

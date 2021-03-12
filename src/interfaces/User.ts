@@ -4,3 +4,8 @@ export interface UserRegisterDTO {
     password: string;
     confirm_password: string;
 }
+
+export interface UserLoginDTO {
+    email: string;
+    password: string;
+}

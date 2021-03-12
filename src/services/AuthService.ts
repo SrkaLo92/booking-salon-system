@@ -1,9 +1,11 @@
 import { Service } from 'typedi';
 import argon2 from 'argon2';
+import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import { UserRegisterDTO } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
 import { User } from '../database/entities/User';
+import config from '../config';
 
 @Service()
 export default class AuthService {
@@ -25,7 +27,32 @@ export default class AuthService {
         return createdUser;
     }
 
-    public async SignIn(): Promise<unknown> {
-        return {};
+    public async SignIn(email: string, password: string): Promise<string> {
+        const user = await this.userRepository.getUserByEmail(email);
+        if (!user) {
+            throw new Error('Credentials are incorrect.');
+        }
+
+        const validPassword = await argon2.verify(user.passwordHash, password);
+        if (!validPassword) {
+            throw new Error('Credentials are incorrect.');
+        }
+
+        return this.generateToken(user);
+    }
+
+    private generateToken(user: User) {
+        const today = new Date();
+        const exp = new Date(today);
+        exp.setDate(today.getDate() + config.jwt.expirationDays);
+
+        return jwt.sign(
+            {
+                id: user.id, // We are gonna use this in the middleware 'isAuth'
+                name: user.name,
+                exp: exp.getTime() / 1000,
+            },
+            config.jwt.secret,
+        );
     }
 }
