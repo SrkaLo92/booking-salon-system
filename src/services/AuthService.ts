@@ -51,6 +51,7 @@ export default class AuthService {
                 id: user.id, // We are gonna use this in the middleware 'isAuth'
                 name: user.name,
                 exp: exp.getTime() / 1000,
+                iss: config.domain,
             },
             config.jwt.secret,
         );
