@@ -6,7 +6,9 @@ type AsyncFunction = (req: Request, res: Response, next: NextFunction) => Promis
 
 export default (execution: AsyncFunction): RequestHandler => (req: Request, res: Response, next: NextFunction) => {
     execution(req, res, next).catch(e => {
-        Logger.error('🔥 error: %o', e);
+        if (e.status == null && e.status === 500) {
+            Logger.error('🔥 error: %o', e);
+        }
         next(e);
     });
 };

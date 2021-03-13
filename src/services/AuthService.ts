@@ -6,6 +6,7 @@ import { UserRegisterDTO } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
 import { User } from '../database/entities/User';
 import config from '../config';
+import { UnauthorizedError } from '../util/errors/UnauthorizedError';
 
 @Service()
 export default class AuthService {
@@ -30,12 +31,12 @@ export default class AuthService {
     public async SignIn(email: string, password: string): Promise<string> {
         const user = await this.userRepository.getUserByEmail(email);
         if (!user) {
-            throw new Error('Credentials are incorrect.');
+            throw new UnauthorizedError('Credentials are incorrect.');
         }
 
         const validPassword = await argon2.verify(user.passwordHash, password);
         if (!validPassword) {
-            throw new Error('Credentials are incorrect.');
+            throw new UnauthorizedError('Credentials are incorrect.');
         }
 
         return this.generateToken(user);
