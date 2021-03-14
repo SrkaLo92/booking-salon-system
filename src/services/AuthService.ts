@@ -6,15 +6,16 @@ import { UserRegisterDTO } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
 import { User } from '../database/entities/User';
 import config from '../config';
-import { UnauthorizedError } from '../util/errors/UnauthorizedError';
+import UnauthorizedError from '../util/errors/UnauthorizedError';
+import ValidationError from '../util/errors/ValidationError';
 
 @Service()
 export default class AuthService {
     constructor(private userRepository: UserRepository) {}
 
     public async SignUp(userDTO: UserRegisterDTO): Promise<User> {
-        if (userDTO.password !== userDTO.confirm_password) {
-            throw new Error('Password and confirm password are not same!'); // change this with custom errors
+        if (userDTO.password !== userDTO.confirmPassword) {
+            throw new ValidationError('Password and confirm password are not same!'); // change this with custom errors
         }
 
         const salt = randomBytes(32);

@@ -18,7 +18,7 @@ export default (app: Router): void => {
                 name: Joi.string().required(),
                 email: Joi.string().required().email(),
                 password: Joi.string().required(),
-                confirm_password: Joi.string().required(),
+                confirmPassword: Joi.string().required(),
             }),
         }),
         asyncHandler(async (req: Request, res: Response) => {
