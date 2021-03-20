@@ -1,7 +1,7 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Property } from '@mikro-orm/core';
 import BaseEntity from './BaseEntity';
 
-@Entity({ name: 'user' })
+@Entity()
 export class User extends BaseEntity {
     constructor(name: string, email: string, passwordHash: string, isActive: boolean) {
         super();
@@ -11,15 +11,15 @@ export class User extends BaseEntity {
         this.isActive = isActive;
     }
 
-    @Column()
+    @Property({ length: 256 })
     name: string;
 
-    @Column({ unique: true })
+    @Property({ unique: true })
     email: string;
 
-    @Column({ name: 'password_hash' })
+    @Property()
     passwordHash: string;
 
-    @Column({ name: 'is_active' })
+    @Property()
     isActive: boolean;
 }

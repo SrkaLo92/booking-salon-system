@@ -1,16 +1,21 @@
-import { Service } from 'typedi';
-import { getRepository } from 'typeorm';
+import { Inject, Service } from 'typedi';
+import { MikroORM, EntityRepository } from '@mikro-orm/core';
 import { User } from '../entities/User';
 
 @Service()
 export default class UserRepository {
-    private repository = getRepository(User);
+    private ormRepository: EntityRepository<User>;
 
-    save(user: User): Promise<User> {
-        return this.repository.save(user);
+    constructor(@Inject('orm') orm: MikroORM) {
+        this.ormRepository = orm.em.getRepository(User);
+    }
+
+    async save(user: User): Promise<User> {
+        await this.ormRepository.persistAndFlush(user);
+        return user;
     }
 
     getUserByEmail(email: string): Promise<User> {
-        return this.repository.findOne({ where: { email } });
+        return this.ormRepository.findOne({ email });
     }
 }

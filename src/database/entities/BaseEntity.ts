@@ -1,17 +1,13 @@
-import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Property, PrimaryKey } from '@mikro-orm/core';
 
+@Entity({ abstract: true })
 export default class BaseEntity {
-    @PrimaryGeneratedColumn()
+    @PrimaryKey()
     id: number;
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP(6)' })
-    public createdAt: Date;
+    @Property()
+    createdAt: Date = new Date();
 
-    @UpdateDateColumn({
-        name: 'updated_at',
-        type: 'timestamp',
-        default: () => 'CURRENT_TIMESTAMP(6)',
-        onUpdate: 'CURRENT_TIMESTAMP(6)',
-    })
-    public updatedAt: Date;
+    @Property({ onUpdate: () => new Date() })
+    updatedAt: Date = new Date();
 }
