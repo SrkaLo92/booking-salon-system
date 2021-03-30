@@ -3,7 +3,7 @@ import { Entity, Property, PrimaryKey } from '@mikro-orm/core';
 @Entity({ abstract: true })
 export default class BaseEntity {
     @PrimaryKey()
-    id: number;
+    id!: number;
 
     @Property()
     createdAt: Date = new Date();

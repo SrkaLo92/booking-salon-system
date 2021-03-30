@@ -1,6 +1,6 @@
 import { Entity, Property, ManyToOne, OneToMany } from '@mikro-orm/core';
 import BaseEntity from './BaseEntity';
-import { InamateMailingAddress } from './InmateMailingAddress';
+import { InmateMailingAddress } from './InmateMailingAddress';
 import { User } from './User';
 
 @Entity()
@@ -24,7 +24,7 @@ export class InmateContact extends BaseEntity {
         this.user = user;
         this.facilityName = facilityName;
         this.facilityState = facilityState;
-        this.faciltyCity = facilityCity;
+        this.facilityCity = facilityCity;
         this.facilityZipCode = facilityZipCode;
     }
 
@@ -37,7 +37,7 @@ export class InmateContact extends BaseEntity {
     @Property()
     inmateId: string;
 
-    @Property({ type: 'bytea' })
+    @Property({ type: 'bytea', nullable: true })
     contactImage: Buffer;
 
     @Property()
@@ -47,7 +47,7 @@ export class InmateContact extends BaseEntity {
     facilityState: string;
 
     @Property({ length: 100 })
-    faciltyCity: string;
+    facilityCity: string;
 
     @Property({ length: 10 })
     facilityZipCode: string;
@@ -55,6 +55,6 @@ export class InmateContact extends BaseEntity {
     @ManyToOne(() => User)
     user: User;
 
-    @OneToMany(() => InamateMailingAddress, mailingAddress => mailingAddress.inmateContact)
-    mailingAdresses: InamateMailingAddress[];
+    @OneToMany(() => InmateMailingAddress, mailingAddress => mailingAddress.inmateContact)
+    mailingAddresses: InmateMailingAddress[];
 }

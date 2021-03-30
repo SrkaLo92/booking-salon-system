@@ -18,4 +18,8 @@ export default class UserRepository {
     getUserByEmail(email: string): Promise<User> {
         return this.ormRepository.findOne({ email });
     }
+
+    getUserById(id: number): Promise<User> {
+        return this.ormRepository.findOne({ id });
+    }
 }

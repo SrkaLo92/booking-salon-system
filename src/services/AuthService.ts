@@ -8,6 +8,7 @@ import { User } from '../database/entities/User';
 import config from '../config';
 import UnauthorizedError from '../util/errors/UnauthorizedError';
 import ValidationError from '../util/errors/ValidationError';
+import { JwtToken } from '../interfaces/Express';
 
 @Service()
 export default class AuthService {
@@ -48,14 +49,12 @@ export default class AuthService {
         const exp = new Date(today);
         exp.setDate(today.getDate() + config.jwt.expirationDays);
 
-        return jwt.sign(
-            {
-                id: user.id, // We are gonna use this in the middleware 'isAuth'
-                name: user.name,
-                exp: exp.getTime() / 1000,
-                iss: config.domain,
-            },
-            config.jwt.secret,
-        );
+        const jwtData: JwtToken = {
+            id: user.id, // We are gonna use this in the middleware 'isAuth'
+            name: user.name,
+            exp: exp.getTime() / 1000,
+            iss: config.domain,
+        };
+        return jwt.sign(jwtData, config.jwt.secret);
     }
 }

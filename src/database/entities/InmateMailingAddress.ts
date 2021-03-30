@@ -2,7 +2,7 @@ import { Entity, Property, ManyToOne } from '@mikro-orm/core';
 import { InmateContact } from './InmateContact';
 
 @Entity()
-export class InamateMailingAddress {
+export class InmateMailingAddress {
     constructor(inmateContact: InmateContact, order: number, mailingAddress: string) {
         this.inmateContact = inmateContact;
         this.order = order;
