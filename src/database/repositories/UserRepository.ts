@@ -10,9 +10,9 @@ export default class UserRepository {
         this.ormRepository = orm.em.getRepository(User);
     }
 
-    async save(user: User): Promise<User> {
+    async saveUser(user: User): Promise<User> {
         await this.ormRepository.persistAndFlush(user);
-        return user;
+        return { ...user };
     }
 
     getUserByEmail(email: string): Promise<User> {

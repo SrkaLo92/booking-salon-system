@@ -21,6 +21,7 @@ const mikroORMConfig: unknown = {
         safe: true,
         emit: 'ts',
     },
+    debug: config.database.debug,
 };
 
 export default mikroORMConfig as MikroORMOptions;

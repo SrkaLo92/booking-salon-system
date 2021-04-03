@@ -24,7 +24,7 @@ export default class AuthService {
 
         const user: User = new User(userDTO.name, userDTO.email, passwordHash, true);
 
-        const createdUser = await this.userRepository.save(user);
+        const createdUser = await this.userRepository.saveUser(user);
         delete createdUser.passwordHash;
 
         return createdUser;

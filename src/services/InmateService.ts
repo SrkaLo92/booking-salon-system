@@ -35,7 +35,7 @@ export default class InmateService {
         );
 
         this.inmateRepository.persistContact(inmateContact);
-        
+
         const mailingAddresses = inmateContactInfo.mailingAddresses.map(
             (address, index) => new InmateMailingAddress(inmateContact, index + 1, address),
         );

@@ -26,6 +26,7 @@ export default {
         host: process.env.DATABASE_HOST,
         port: process.env.DATABASE_PORT,
         type: process.env.DATABASE_DIALECT,
+        debug: Boolean(process.env.DATABASE_DEBUG),
     },
 
     /**

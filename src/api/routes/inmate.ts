@@ -1,5 +1,5 @@
 import { celebrate, Joi } from 'celebrate';
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { Container } from 'typedi';
 import { RequestWithUser } from '../../interfaces/Express';
 import { InmateContactAdd } from '../../interfaces/Inmate';
