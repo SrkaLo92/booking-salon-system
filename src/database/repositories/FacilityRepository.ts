@@ -10,7 +10,7 @@ export default class FacilityRepository {
         this.ormRepository = orm.em.getRepository(Facility);
     }
 
-    getFacilities(): Promise<Facility[]> {
+    findAllFacilities(): Promise<Facility[]> {
         return this.ormRepository.findAll();
     }
 }

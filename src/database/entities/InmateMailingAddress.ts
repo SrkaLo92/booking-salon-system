@@ -3,7 +3,7 @@ import { InmateContact } from './InmateContact';
 
 @Entity()
 export class InmateMailingAddress {
-    constructor(inmateContact: InmateContact, order: number, mailingAddress: string) {
+    constructor(order: number, mailingAddress: string, inmateContact?: InmateContact) {
         this.inmateContact = inmateContact;
         this.order = order;
         this.mailingAddress = mailingAddress;

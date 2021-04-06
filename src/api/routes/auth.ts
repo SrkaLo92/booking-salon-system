@@ -1,10 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request } from 'express';
 import { Container } from 'typedi';
 import AuthService from '../../services/AuthService';
 import { UserLoginDTO, UserRegisterDTO } from '../../interfaces/User';
 import { celebrate, Joi } from 'celebrate';
-import asyncHandler from '../../util/asyncHandler';
 import middlewares from '../middlewares';
+import asyncHandler from '../../util/asyncHandler';
 
 const route = Router();
 
@@ -21,11 +21,13 @@ export default (app: Router): void => {
                 confirmPassword: Joi.string().required(),
             }),
         }),
-        asyncHandler(async (req: Request, res: Response) => {
-            const authService = Container.get(AuthService);
-            const user = await authService.SignUp(req.body as UserRegisterDTO);
-            res.status(201).json(user);
-        }),
+        asyncHandler(
+            (req: Request) => {
+                const authService = Container.get(AuthService);
+                return authService.SignUp(req.body as UserRegisterDTO);
+            },
+            { status: 201 },
+        ),
     );
 
     route.post(
@@ -36,20 +38,22 @@ export default (app: Router): void => {
                 password: Joi.string().required(),
             }),
         }),
-        asyncHandler(async (req: Request, res: Response) => {
-            const authService = Container.get(AuthService);
-            const { email, password } = req.body as UserLoginDTO;
-            const token = await authService.SignIn(email, password);
-            res.status(201).json({ token });
-        }),
+        asyncHandler(
+            (req: Request) => {
+                const authService = Container.get(AuthService);
+                const { email, password } = req.body as UserLoginDTO;
+                return authService.SignIn(email, password);
+            },
+            { converter: result => ({ token: result }) },
+        ),
     );
 
     route.post(
         '/signout',
         middlewares.isAuth,
-        asyncHandler(async (req: Request, res: Response) => {
+        asyncHandler((req: Request) => {
             //@TODO AuthService.Logout(req.user) do some clever stuff
-            res.status(200).end();
+            return req.body;
         }),
     );
 };

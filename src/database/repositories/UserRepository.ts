@@ -10,16 +10,25 @@ export default class UserRepository {
         this.ormRepository = orm.em.getRepository(User);
     }
 
-    async saveUser(user: User): Promise<User> {
-        await this.ormRepository.persistAndFlush(user);
-        return { ...user };
+    saveUser(user: User): Promise<void> {
+        user.isDeleted = false;
+        return this.ormRepository.persistAndFlush(user);
     }
 
-    getUserByEmail(email: string): Promise<User> {
-        return this.ormRepository.findOne({ email });
+    findUserByEmail(email: string): Promise<User> {
+        return this.ormRepository.findOne({ email, isDeleted: false });
     }
 
-    getUserById(id: number): Promise<User> {
-        return this.ormRepository.findOne({ id });
+    findUserById(id: number): Promise<User> {
+        return this.ormRepository.findOne({ id, isDeleted: false });
+    }
+
+    existsUserByEmail(email: string): Promise<boolean> {
+        return this.ormRepository.findOne({ email, isDeleted: false }, { fields: ['id'] }).then(user => user != null);
+    }
+
+    deleteUser(user: User): Promise<void> {
+        user.isDeleted = true;
+        return this.ormRepository.persistAndFlush(user);
     }
 }

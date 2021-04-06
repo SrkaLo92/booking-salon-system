@@ -10,7 +10,24 @@ export default class InmateRepository {
         this.ormRepository = orm.em.getRepository(InmateContact);
     }
 
-    persistContact(contact: InmateContact): void {
-        this.ormRepository.persist(contact);
+    saveContact(contact: InmateContact): Promise<void> {
+        contact.isDeleted = false;
+        return this.ormRepository.persistAndFlush(contact);
+    }
+
+    findContactsByUserId(userId: number): Promise<InmateContact[]> {
+        return this.ormRepository.find({ user: { id: userId }, isDeleted: false }, { populate: ['mailingAddresses'] });
+    }
+
+    findContactByIdAndUserId(contactId: number, userId: number): Promise<InmateContact> {
+        return this.ormRepository.findOne(
+            { user: { id: userId }, id: contactId, isDeleted: false },
+            { populate: ['mailingAddresses'] },
+        );
+    }
+
+    deleteContact(contact: InmateContact): Promise<void> {
+        contact.isDeleted = true;
+        return this.ormRepository.persistAndFlush(contact);
     }
 }

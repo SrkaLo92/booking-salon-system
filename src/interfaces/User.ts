@@ -9,3 +9,15 @@ export interface UserLoginDTO {
     email: string;
     password: string;
 }
+
+export interface UserSave {
+    name: string;
+    email: string;
+    password?: string;
+}
+
+export interface UserLoad {
+    id: number;
+    name: string;
+    email: string;
+}

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { Container } from 'typedi';
 import FacilityService from '../../services/FacilityService';
 import asyncHandler from '../../util/asyncHandler';
@@ -12,10 +12,12 @@ export default (app: Router): void => {
     route.get(
         '',
         middlewares.isAuth,
-        asyncHandler(async (req: Request, res: Response) => {
-            const facilityService = Container.get(FacilityService);
-            const facilities = await facilityService.getAllFacilities();
-            res.status(200).json({ facilities });
-        }),
+        asyncHandler(
+            () => {
+                const facilityService = Container.get(FacilityService);
+                return facilityService.getAllFacilities();
+            },
+            { converter: result => ({ facilities: result }) },
+        ),
     );
 };

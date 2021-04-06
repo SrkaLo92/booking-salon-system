@@ -1,14 +1,20 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import Logger from '../loaders/logger';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AsyncFunction = (req: Request, res: Response, next: NextFunction) => Promise<any>;
+type AsyncFunction = (req: Request) => Promise<unknown>;
+type AsyncHandlerOptions = { status?: number; converter?: (result: unknown) => unknown };
 
-export default (execution: AsyncFunction): RequestHandler => (req: Request, res: Response, next: NextFunction) => {
-    execution(req, res, next).catch(e => {
-        if (e.status == null && e.status === 500) {
+export default (execution: AsyncFunction, options?: AsyncHandlerOptions): RequestHandler => (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    execution(req)
+        .then(result => {
+            res.status(options?.status || 200).json(options?.converter ? options.converter(result) : result);
+        })
+        .catch(e => {
             Logger.error('🔥 error: %o', e);
-        }
-        next(e);
-    });
+            next(e);
+        });
 };
