@@ -1,5 +1,5 @@
 import { Inject, Service } from 'typedi';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
+import { MikroORM, EntityRepository, QueryOrder } from '@mikro-orm/core';
 import { InmateContact } from '../entities/InmateContact';
 
 @Service()
@@ -16,7 +16,10 @@ export default class InmateRepository {
     }
 
     findContactsByUserId(userId: number): Promise<InmateContact[]> {
-        return this.ormRepository.find({ user: { id: userId }, isDeleted: false }, { populate: ['mailingAddresses'] });
+        return this.ormRepository.find(
+            { user: { id: userId }, isDeleted: false },
+            { orderBy: { createdAt: QueryOrder.DESC }, populate: ['mailingAddresses'] },
+        );
     }
 
     findContactByIdAndUserId(contactId: number, userId: number): Promise<InmateContact> {
