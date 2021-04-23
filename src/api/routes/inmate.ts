@@ -39,7 +39,7 @@ export default (app: Router): void => {
         asyncHandler(
             (req: RequestWithUser) => {
                 const inmateService = Container.get(InmateService);
-                return inmateService.addInmateContact(req.user.id, req.body as InmateContactSave, null);
+                return inmateService.addInmateContact(req.user.id, req.body as InmateContactSave);
             },
             { status: 201 },
         ),
@@ -49,6 +49,9 @@ export default (app: Router): void => {
         '/:contactId',
         middlewares.isAuth,
         celebrate({
+            params: Joi.object({
+                contactId: Joi.number().required(),
+            }),
             body: Joi.object({
                 firstName: Joi.string().required(),
                 lastName: Joi.string().required(),
@@ -66,7 +69,6 @@ export default (app: Router): void => {
                 req.user.id,
                 Number(req.params.contactId),
                 req.body as InmateContactSave,
-                null,
             );
         }),
     );
@@ -74,6 +76,11 @@ export default (app: Router): void => {
     route.delete(
         '/:contactId',
         middlewares.isAuth,
+        celebrate({
+            params: Joi.object({
+                contactId: Joi.number().required(),
+            }),
+        }),
         asyncHandler((req: RequestWithUser) => {
             const inmateService = Container.get(InmateService);
             return inmateService.deleteInmateContact(req.user.id, Number(req.params.contactId));

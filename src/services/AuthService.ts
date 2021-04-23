@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import jwt from 'jsonwebtoken';
-import { UserRegisterDTO } from '../interfaces/User';
+import { UserLoad, UserRegisterDTO, UserSave } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
 import { User } from '../database/entities/User';
 import config from '../config';
@@ -9,6 +9,7 @@ import ValidationError from '../util/errors/ValidationError';
 import { JwtToken } from '../interfaces/Express';
 import { to } from '../util/awaitTo';
 import { hashPassword, verifyPassword } from '../util/security/password';
+import NotFoundError from '../util/errors/NotFoundError';
 
 @Service()
 export default class AuthService {
@@ -51,8 +52,8 @@ export default class AuthService {
         };
     }
 
-    public async editUser(userID: number, userInfo: UserSave, userImage: Buffer): Promise<void> {
-        const [findUserErr, existingUser] = await to(this.userRepository.findUserById(userID));
+    public async editUser(userId: number, userInfo: UserSave): Promise<void> {
+        const [findUserErr, existingUser] = await to(this.userRepository.findUserById(userId));
         if (findUserErr) throw findUserErr;
         if (!existingUser) throw new NotFoundError(`You should not be here, please contact support`);
 

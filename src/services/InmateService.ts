@@ -11,8 +11,8 @@ import NotFoundError from '../util/errors/NotFoundError';
 export default class InmateService {
     constructor(private inmateRepository: InmateRepository, private userRepository: UserRepository) {}
 
-    public async getInmateContacts(userID: number): Promise<InmateContactLoad[]> {
-        const [findContactsErr, contacts] = await to(this.inmateRepository.findContactsByUserId(userID));
+    public async getInmateContacts(userId: number): Promise<InmateContactLoad[]> {
+        const [findContactsErr, contacts] = await to(this.inmateRepository.findContactsByUserId(userId));
         if (findContactsErr) throw findContactsErr;
 
         return contacts.map(this.convertToInmateContactLoad);
@@ -25,19 +25,14 @@ export default class InmateService {
         return { ...contactInfo, mailingAddresses, user: { id: user.id } };
     }
 
-    public async addInmateContact(
-        userID: number,
-        inmateContactInfo: InmateContactSave,
-        inmateImage: Buffer,
-    ): Promise<InmateContactLoad> {
-        const [findUserErr, user] = await to(this.userRepository.findUserById(userID));
+    public async addInmateContact(userId: number, inmateContactInfo: InmateContactSave): Promise<InmateContactLoad> {
+        const [findUserErr, user] = await to(this.userRepository.findUserById(userId));
         if (findUserErr) throw findUserErr;
 
         const inmateContact = new InmateContact(
             inmateContactInfo.firstName,
             inmateContactInfo.lastName,
             inmateContactInfo.inmateId,
-            inmateImage,
             inmateContactInfo.facilityName,
             inmateContactInfo.facilityState,
             inmateContactInfo.facilityCity,
@@ -53,13 +48,12 @@ export default class InmateService {
     }
 
     public async editInmateContact(
-        userID: number,
+        userId: number,
         contactId: number,
         inmateContactInfo: InmateContactSave,
-        inmateImage: Buffer,
     ): Promise<InmateContactLoad> {
         const [findContactErr, existingInmateContact] = await to(
-            this.inmateRepository.findContactByIdAndUserId(contactId, userID),
+            this.inmateRepository.findContactByIdAndUserId(contactId, userId),
         );
         if (findContactErr) throw findContactErr;
         if (!existingInmateContact) throw new NotFoundError(`There is no inmate contact with id ${contactId}`);
@@ -67,7 +61,6 @@ export default class InmateService {
         existingInmateContact.firstName = inmateContactInfo.firstName;
         existingInmateContact.lastName = inmateContactInfo.lastName;
         existingInmateContact.inmateId = inmateContactInfo.inmateId;
-        existingInmateContact.contactImage = inmateImage;
         existingInmateContact.facilityName = inmateContactInfo.facilityName;
         existingInmateContact.facilityState = inmateContactInfo.facilityState;
         existingInmateContact.facilityCity = inmateContactInfo.facilityCity;
@@ -86,9 +79,9 @@ export default class InmateService {
         return mailingAddresses.map((address, index) => new InmateMailingAddress(index + 1, address));
     }
 
-    public async deleteInmateContact(userID: number, contactId: number): Promise<void> {
+    public async deleteInmateContact(userId: number, contactId: number): Promise<void> {
         const [findContactErr, existingInmateContact] = await to(
-            this.inmateRepository.findContactByIdAndUserId(contactId, userID),
+            this.inmateRepository.findContactByIdAndUserId(contactId, userId),
         );
         if (findContactErr) throw findContactErr;
         if (!existingInmateContact) throw new NotFoundError(`There is no inmate contact with id ${contactId}`);

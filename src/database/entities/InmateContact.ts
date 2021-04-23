@@ -9,7 +9,6 @@ export class InmateContact extends BaseDeletableEntity {
         firstName: string,
         lastName: string,
         inmateID: string,
-        contactImage: Buffer,
         facilityName: string,
         facilityState: string,
         facilityCity: string,
@@ -21,7 +20,6 @@ export class InmateContact extends BaseDeletableEntity {
         this.firstName = firstName;
         this.lastName = lastName;
         this.inmateId = inmateID;
-        this.contactImage = contactImage;
         this.user = user;
         this.facilityName = facilityName;
         this.facilityState = facilityState;
@@ -39,9 +37,6 @@ export class InmateContact extends BaseDeletableEntity {
 
     @Property()
     inmateId: string;
-
-    @Property({ type: 'bytea', nullable: true })
-    contactImage: Buffer;
 
     @Property()
     facilityName: string;

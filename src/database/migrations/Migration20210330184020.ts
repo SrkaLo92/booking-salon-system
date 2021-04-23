@@ -3,7 +3,7 @@ import { Migration } from '@mikro-orm/migrations';
 export class Migration20210330184020 extends Migration {
     async up(): Promise<void> {
         this.addSql(
-            'create table "inmate_contact" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "is_deleted" bool not null default false, "first_name" varchar(255) not null, "last_name" varchar(255) not null, "inmate_id" varchar(255) not null, "contact_image" jsonb null, "facility_name" varchar(255) not null, "facility_state" varchar(100) not null, "facility_city" varchar(100) not null, "facility_zip_code" varchar(10) not null, "user_id" int4 not null);',
+            'create table "inmate_contact" ("id" serial primary key, "created_at" timestamptz(0) not null, "updated_at" timestamptz(0) not null, "is_deleted" bool not null default false, "first_name" varchar(255) not null, "last_name" varchar(255) not null, "inmate_id" varchar(255) not null, "facility_name" varchar(255) not null, "facility_state" varchar(100) not null, "facility_city" varchar(100) not null, "facility_zip_code" varchar(10) not null, "user_id" int4 not null);',
         );
 
         this.addSql(
