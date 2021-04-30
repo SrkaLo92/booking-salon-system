@@ -1,34 +1,57 @@
 import { Inject, Service } from 'typedi';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
-import { User } from '../entities/User';
+import { PrismaClient } from '.prisma/client';
+import { UserInsert, UserUpdate, UserSelect, UserSelectWithPassword } from '../../interfaces/User';
+
+const selectColumns = { id: true, name: true, email: true, createdAt: true, updatedAt: true };
 
 @Service()
 export default class UserRepository {
-    private ormRepository: EntityRepository<User>;
+    constructor(@Inject('db') private prisma: PrismaClient) {}
 
-    constructor(@Inject('orm') orm: MikroORM) {
-        this.ormRepository = orm.em.getRepository(User);
+    createUser(user: UserInsert): Promise<void> {
+        return this.prisma.user
+            .create({
+                select: null,
+                data: { ...user, deleted: false, active: true },
+            })
+            .then();
     }
 
-    saveUser(user: User): Promise<void> {
-        user.isDeleted = false;
-        return this.ormRepository.persistAndFlush(user);
+    updateUser(userId: number, user: UserUpdate): Promise<void> {
+        return this.prisma.user
+            .update({
+                select: null,
+                where: { id: userId },
+                data: user,
+            })
+            .then();
     }
 
-    findUserByEmail(email: string): Promise<User> {
-        return this.ormRepository.findOne({ email, isDeleted: false });
+    findUserByEmail(email: string): Promise<UserSelectWithPassword> {
+        return this.prisma.user.findFirst({
+            select: { ...selectColumns, passwordHash: true },
+            where: { email: email, deleted: false },
+        });
     }
 
-    findUserById(id: number): Promise<User> {
-        return this.ormRepository.findOne({ id, isDeleted: false });
+    findUserById(id: number): Promise<UserSelect> {
+        return this.prisma.user.findFirst({
+            select: { id: true, name: true, email: true, createdAt: true, updatedAt: true },
+            where: { id, deleted: false },
+        });
     }
 
     existsUserByEmail(email: string): Promise<boolean> {
-        return this.ormRepository.findOne({ email, isDeleted: false }, { fields: ['id'] }).then(user => user != null);
+        return this.prisma.user.count({ where: { email } }).then(count => count > 0);
     }
 
-    deleteUser(user: User): Promise<void> {
-        user.isDeleted = true;
-        return this.ormRepository.persistAndFlush(user);
+    deleteUser(userId: number): Promise<void> {
+        return this.prisma.user
+            .update({
+                select: null,
+                where: { id: userId },
+                data: { deleted: true },
+            })
+            .then();
     }
 }

@@ -1,27 +1,26 @@
 import { Inject, Service } from 'typedi';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
-import { InmateContactImage } from '../entities/InmateContactImage';
+import { PrismaClient } from '.prisma/client';
+import { InmateImage } from '../../interfaces/Image';
 
 @Service()
 export default class InmateImageRepository {
-    private ormRepository: EntityRepository<InmateContactImage>;
+    constructor(@Inject('db') private prisma: PrismaClient) {}
 
-    constructor(@Inject('orm') orm: MikroORM) {
-        this.ormRepository = orm.em.getRepository(InmateContactImage);
+    saveImage(inmateContactId: number, image: Buffer, mimetype: string): Promise<void> {
+        return this.prisma.inmateContactImage
+            .upsert({
+                create: { image, mimetype, inmateContactId },
+                update: { image, mimetype },
+                where: { inmateContactId },
+            })
+            .then();
     }
 
-    saveImage(contactImage: InmateContactImage): Promise<void> {
-        return this.ormRepository.persistAndFlush(contactImage);
-    }
-
-    findContactImageByContactIdAndUserId(contactId: number, userId: number): Promise<InmateContactImage> {
-        return this.ormRepository.findOne({
-            inmateContact: {
-                id: contactId,
-                isDeleted: false,
-                user: {
-                    id: userId,
-                },
+    findContactImageByContactIdAndUserId(contactId: number, creatorId: number): Promise<InmateImage> {
+        return this.prisma.inmateContactImage.findFirst({
+            where: {
+                inmateContactId: contactId,
+                inmateContact: { deleted: false, creatorId },
             },
         });
     }
