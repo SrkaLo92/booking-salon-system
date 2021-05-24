@@ -82,3 +82,55 @@ model UserImage {
 
   @@map("user_image")
 }
+
+model Pricelist {
+  id             Int             @id @default(autoincrement())
+  name           String?         @db.VarChar(255)
+  description    String?         @db.VarChar(1000)
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  servicePrices  PriceService[]
+  shippingPrices PriceShipping[]
+
+  @@map("price_list")
+}
+
+enum ServiceType {
+  IMAGE
+  MESSAGE
+}
+
+model PriceService {
+  id           Int         @id @default(autoincrement())
+  price        Decimal     @db.Decimal(10, 2)
+  fromQuantity Int         @map("from_quantity")
+  toQuantity   Int?        @map("to_quantity")
+  serviceType  ServiceType @map("service_type")
+  description  String?     @db.VarChar(1000)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  priceListId  Int         @map("price_list_id")
+  priceList    Pricelist   @relation(fields: [priceListId], references: [id])
+
+  @@map("price_service")
+}
+
+model Shipping {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.VarChar(1000)
+
+  PriceShipping PriceShipping[]
+  @@map("shipping")
+}
+
+model PriceShipping {
+  price       Decimal   @db.Decimal(10, 2)
+  shippingId  Int       @map("shipping_id")
+  shipping    Shipping  @relation(fields: [shippingId], references: [id])
+  priceListId Int       @map("price_list_id")
+  priceList   Pricelist @relation(fields: [priceListId], references: [id])
+
+  @@id([priceListId, shippingId])
+  @@map("price_shipping")
+}

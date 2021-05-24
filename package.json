@@ -8,6 +8,7 @@
     "prod-build": "npm run build",
     "start": "nodemon",
     "inspect": "nodemon --inspect src/app.ts",
+    "db-update": "prisma migrate dev && prisma generate",
     "lint": "npm run lint:js ",
     "lint:eslint": "eslint --ignore-path .gitignore --ext .ts",
     "lint:js": "npm run lint:eslint src/",
