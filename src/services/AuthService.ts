@@ -1,8 +1,7 @@
 import { Service } from 'typedi';
 import jwt from 'jsonwebtoken';
-import { UserLoad, UserRegisterDTO, UserSave } from '../interfaces/User';
+import { UserInsert, UserLoad, UserRegisterDTO, UserSave, UserSelect, UserUpdate } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
-import { User } from '../database/entities/User';
 import config from '../config';
 import UnauthorizedError from '../util/errors/UnauthorizedError';
 import ValidationError from '../util/errors/ValidationError';
@@ -16,20 +15,19 @@ export default class AuthService {
     constructor(private userRepository: UserRepository) {}
 
     public async SignUp(userDTO: UserRegisterDTO): Promise<void> {
-        if (userDTO.password !== userDTO.confirmPassword)
-            throw new ValidationError('Password and confirm password are not same!');
+        const { password, confirmPassword, ...userInfo } = userDTO;
+        if (password !== confirmPassword) throw new ValidationError('Password and confirm password are not same!');
 
-        const [existsUserErr, userExists] = await to(this.userRepository.existsUserByEmail(userDTO.email));
+        const [existsUserErr] = await to(this.checkIsEmailUnique(userInfo.email));
         if (existsUserErr) throw existsUserErr;
-        if (userExists) throw new ValidationError(`User with email ${userDTO.email} already exists`);
 
-        const [hashErr, hashedPassword] = await to(hashPassword(userDTO.password));
+        const [hashErr, hashedPassword] = await to(hashPassword(password));
         if (hashErr) throw hashErr;
 
-        const user: User = new User(userDTO.name, userDTO.email, hashedPassword, true);
+        const user: UserInsert = { ...userInfo, passwordHash: hashedPassword };
 
-        const [saveUserErr] = await to(this.userRepository.saveUser(user));
-        if (saveUserErr) throw saveUserErr;
+        const [createUserErr] = await to(this.userRepository.createUser(user));
+        if (createUserErr) throw createUserErr;
     }
 
     public async SignIn(email: string, password: string): Promise<string> {
@@ -52,31 +50,39 @@ export default class AuthService {
         };
     }
 
-    public async editUser(userId: number, userInfo: UserSave): Promise<void> {
+    public async editUser(userId: number, userSave: UserSave): Promise<void> {
+        const { password, ...userInfo } = userSave;
+
         const [findUserErr, existingUser] = await to(this.userRepository.findUserById(userId));
         if (findUserErr) throw findUserErr;
         if (!existingUser) throw new NotFoundError(`You should not be here, please contact support`);
 
         if (existingUser.email !== userInfo.email) {
-            const [existsUserErr, userExists] = await to(this.userRepository.existsUserByEmail(userInfo.email));
+            const [existsUserErr] = await to(this.checkIsEmailUnique(userInfo.email));
             if (existsUserErr) throw existsUserErr;
-            if (userExists) throw new ValidationError(`User with email ${userInfo.email} already exists`);
         }
 
-        existingUser.name = userInfo.name;
-        existingUser.email = userInfo.email;
-        if (userInfo.password) {
-            const [hashErr, hashedPassword] = await to(hashPassword(userInfo.password));
+        const user: UserUpdate = { ...userInfo };
+
+        if (password) {
+            const [hashErr, hashedPassword] = await to(hashPassword(password));
             if (hashErr) throw hashErr;
-            existingUser.passwordHash = hashedPassword;
+            user.passwordHash = hashedPassword;
         }
-        const [saveUserErr] = await to(this.userRepository.saveUser(existingUser));
-        if (saveUserErr) throw saveUserErr;
+
+        const [updateUserErr] = await to(this.userRepository.updateUser(userId, user));
+        if (updateUserErr) throw saveUserErr;
 
         return this.generateToken(existingUser);
     }
 
-    private generateToken(user: User) {
+    private checkIsEmailUnique(email: string): Promise<void> {
+        return this.userRepository.existsUserByEmail(email).then(userExists => {
+            if (userExists) throw new ValidationError(`User with email ${email} already exists`);
+        });
+    }
+
+    private generateToken(user: UserSelect) {
         const today = new Date();
         const exp = new Date(today);
         exp.setDate(today.getDate() + config.jwt.expirationDays);
@@ -96,7 +102,7 @@ export default class AuthService {
         if (findUserErr) throw findUserErr;
         if (!existingUser) throw new NotFoundError(`There is no user with id ${userId}`);
 
-        const [deleteUserErr] = await to(this.userRepository.deleteUser(existingUser));
+        const [deleteUserErr] = await to(this.userRepository.deleteUser(existingUser.id));
         if (deleteUserErr) throw deleteUserErr;
     }
 }

@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Facility {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  facilityName String   @map("facility_name") @db.VarChar(256)
+  state        String   @db.VarChar(100)
+  city         String   @db.VarChar(100)
+  zipCode      String   @map("zip_code") @db.VarChar(10)
+
+  @@map("facility")
+}
+
+model InmateContact {
+  id               Int                    @id @default(autoincrement())
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+  deleted          Boolean                @default(false)
+  firstName        String                 @map("first_name") @db.VarChar(255)
+  lastName         String                 @map("last_name") @db.VarChar(255)
+  inmateId         String                 @map("inmate_id") @db.VarChar(255)
+  facilityName     String                 @map("facility_name") @db.VarChar(255)
+  facilityState    String                 @map("facility_state") @db.VarChar(100)
+  facilityCity     String                 @map("facility_city") @db.VarChar(100)
+  facilityZipCode  String                 @map("facility_zip_code") @db.VarChar(10)
+  creatorId        Int                    @map("creator_id")
+  creator          User                   @relation(fields: [creatorId], references: [id])
+  contactImage     InmateContactImage?
+  mailingAddresses InmateMailingAddress[]
+
+  @@map("inmate_conact")
+}
+
+model InmateContactImage {
+  inmateContactId Int           @id @map("inmate_contact_id")
+  image           Bytes
+  mimetype        String        @db.VarChar(255)
+  inmateContact   InmateContact @relation(fields: [inmateContactId], references: [id])
+
+  @@map("inmate_contact_image")
+}
+
+model InmateMailingAddress {
+  inmateContactId Int           @map("inmate_contact_id")
+  order           Int
+  mailingAddress  String        @map("mailing_address") @db.VarChar(255)
+  inmateContact   InmateContact @relation(fields: [inmateContactId], references: [id])
+
+
+  @@id([inmateContactId, order])
+  @@map("inmate_mailing_address")
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  deleted        Boolean         @default(false)
+  name           String          @db.VarChar(256)
+  email          String          @unique @db.VarChar(255)
+  passwordHash   String          @map("password_hash") @db.VarChar(255)
+  active         Boolean
+  inmateContacts InmateContact[]
+  userImage      UserImage?
+
+  @@map("user")
+}
+
+model UserImage {
+  userId   Int    @id @map("user_id")
+  image    Bytes
+  mimetype String @db.VarChar(255)
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@map("user_image")
+}
+
+model Pricelist {
+  id             Int             @id @default(autoincrement())
+  name           String?         @db.VarChar(255)
+  description    String?         @db.VarChar(1000)
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  servicePrices  PriceService[]
+  shippingPrices PriceShipping[]
+
+  @@map("price_list")
+}
+
+enum ServiceType {
+  IMAGE
+  MESSAGE
+}
+
+model PriceService {
+  id           Int         @id @default(autoincrement())
+  price        Decimal     @db.Decimal(10, 2)
+  fromQuantity Int         @map("from_quantity")
+  toQuantity   Int?        @map("to_quantity")
+  serviceType  ServiceType @map("service_type")
+  description  String?     @db.VarChar(1000)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  priceListId  Int         @map("price_list_id")
+  priceList    Pricelist   @relation(fields: [priceListId], references: [id])
+
+  @@map("price_service")
+}
+
+model Shipping {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.VarChar(1000)
+
+  PriceShipping PriceShipping[]
+  @@map("shipping")
+}
+
+model PriceShipping {
+  price       Decimal   @db.Decimal(10, 2)
+  shippingId  Int       @map("shipping_id")
+  shipping    Shipping  @relation(fields: [shippingId], references: [id])
+  priceListId Int       @map("price_list_id")
+  priceList   Pricelist @relation(fields: [priceListId], references: [id])
+
+  @@id([priceListId, shippingId])
+  @@map("price_shipping")
+}

@@ -1,16 +1,12 @@
 import { Inject, Service } from 'typedi';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
-import { Facility } from '../entities/Facility';
+import { Facility, PrismaClient } from '.prisma/client';
 
 @Service()
 export default class FacilityRepository {
-    private ormRepository: EntityRepository<Facility>;
 
-    constructor(@Inject('orm') orm: MikroORM) {
-        this.ormRepository = orm.em.getRepository(Facility);
-    }
+    constructor(@Inject('db') private prisma: PrismaClient) {}
 
     findAllFacilities(): Promise<Facility[]> {
-        return this.ormRepository.findAll();
+        return this.prisma.facility.findMany();
     }
 }

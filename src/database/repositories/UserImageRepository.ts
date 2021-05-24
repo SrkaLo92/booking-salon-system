@@ -1,23 +1,26 @@
 import { Inject, Service } from 'typedi';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
-import { UserImage } from '../entities/UserImage';
+import { PrismaClient } from '.prisma/client';
+import { MeImage } from '../../interfaces/Image';
 
 @Service()
 export default class UserImageRepository {
-    private ormRepository: EntityRepository<UserImage>;
+    constructor(@Inject('db') private prisma: PrismaClient) {}
 
-    constructor(@Inject('orm') orm: MikroORM) {
-        this.ormRepository = orm.em.getRepository(UserImage);
+    saveImage(userId: number, image: Buffer, mimetype: string): Promise<void> {
+        return this.prisma.userImage
+            .upsert({
+                create: { image, mimetype, userId },
+                update: { image, mimetype },
+                where: { userId },
+            })
+            .then();
     }
 
-    saveImage(userImage: UserImage): Promise<void> {
-        return this.ormRepository.persistAndFlush(userImage);
-    }
-
-    findUserImageByUserId(userId: number): Promise<UserImage> {
-        return this.ormRepository.findOne({
-            user: {
-                id: userId,
+    findUserImageByUserId(userId: number): Promise<MeImage> {
+        return this.prisma.userImage.findFirst({
+            where: {
+                userId,
+                user: { deleted: false },
             },
         });
     }

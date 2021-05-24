@@ -1,5 +1,5 @@
+import { Facility } from '.prisma/client';
 import { Service } from 'typedi';
-import { Facility } from '../database/entities/Facility';
 import FacilityRepository from '../database/repositories/FacilityRepository';
 import { FacilityDTO } from '../interfaces/Facility';
 import { to } from '../util/awaitTo';
