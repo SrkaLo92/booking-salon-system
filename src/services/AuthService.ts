@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import jwt from 'jsonwebtoken';
-import { UserInsert, UserLoad, UserRegisterDTO, UserSave, UserSelect, UserUpdate } from '../interfaces/User';
+import { UserInsert, UserLoad, UserRegisterDTO, UserSave, UserUpdate } from '../interfaces/User';
 import UserRepository from '../database/repositories/UserRepository';
 import config from '../config';
 import UnauthorizedError from '../util/errors/UnauthorizedError';
@@ -71,9 +71,15 @@ export default class AuthService {
         }
 
         const [updateUserErr] = await to(this.userRepository.updateUser(userId, user));
-        if (updateUserErr) throw saveUserErr;
+        if (updateUserErr) throw updateUserErr;
 
-        return this.generateToken(existingUser);
+        const updatedUser: UserLoad = {
+            id: userId,
+            name: user.name,
+            email: user.email,
+        };
+
+        return this.generateToken(updatedUser);
     }
 
     private checkIsEmailUnique(email: string): Promise<void> {
@@ -82,7 +88,7 @@ export default class AuthService {
         });
     }
 
-    private generateToken(user: UserSelect) {
+    private generateToken(user: UserLoad) {
         const today = new Date();
         const exp = new Date(today);
         exp.setDate(today.getDate() + config.jwt.expirationDays);
