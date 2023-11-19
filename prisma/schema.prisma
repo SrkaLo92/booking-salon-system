@@ -3,134 +3,195 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model Facility {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  facilityName String   @map("facility_name") @db.VarChar(256)
-  state        String   @db.VarChar(100)
-  city         String   @db.VarChar(100)
-  zipCode      String   @map("zip_code") @db.VarChar(10)
-
-  @@map("facility")
+enum UserRole {
+  USER
+  SALON_OWNER
+  EMPLOYEE
+  SUPER_ADMIN
 }
 
-model InmateContact {
-  id               Int                    @id @default(autoincrement())
-  createdAt        DateTime               @default(now()) @map("created_at")
-  updatedAt        DateTime               @updatedAt @map("updated_at")
-  deleted          Boolean                @default(false)
-  firstName        String                 @map("first_name") @db.VarChar(255)
-  lastName         String                 @map("last_name") @db.VarChar(255)
-  inmateId         String                 @map("inmate_id") @db.VarChar(255)
-  facilityName     String                 @map("facility_name") @db.VarChar(255)
-  facilityState    String                 @map("facility_state") @db.VarChar(100)
-  facilityCity     String                 @map("facility_city") @db.VarChar(100)
-  facilityZipCode  String                 @map("facility_zip_code") @db.VarChar(10)
-  creatorId        Int                    @map("creator_id")
-  creator          User                   @relation(fields: [creatorId], references: [id])
-  contactImage     InmateContactImage?
-  mailingAddresses InmateMailingAddress[]
-
-  @@map("inmate_conact")
-}
-
-model InmateContactImage {
-  inmateContactId Int           @id @map("inmate_contact_id")
-  image           Bytes
-  mimetype        String        @db.VarChar(255)
-  inmateContact   InmateContact @relation(fields: [inmateContactId], references: [id])
-
-  @@map("inmate_contact_image")
-}
-
-model InmateMailingAddress {
-  inmateContactId Int           @map("inmate_contact_id")
-  order           Int
-  mailingAddress  String        @map("mailing_address") @db.VarChar(255)
-  inmateContact   InmateContact @relation(fields: [inmateContactId], references: [id])
-
-
-  @@id([inmateContactId, order])
-  @@map("inmate_mailing_address")
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 model User {
-  id             Int             @id @default(autoincrement())
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-  deleted        Boolean         @default(false)
-  name           String          @db.VarChar(256)
-  email          String          @unique @db.VarChar(255)
-  passwordHash   String          @map("password_hash") @db.VarChar(255)
-  active         Boolean
-  inmateContacts InmateContact[]
-  userImage      UserImage?
+  id                   Int           @id @default(autoincrement())
+  email                String        @unique @db.VarChar(255)
+  passwordHash         String        @map("password_hash") @db.VarChar(255)
+  name                 String        @db.VarChar(256)
+  phoneNumber          String?       @db.VarChar(15)
+  role                 UserRole      @default(USER)
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+  deleted              Boolean       @default(false)
+  active               Boolean
+  clientAppointments   Appointment[] @relation(name: "UserAppointments")
+  employeeAppointments Appointment[] @relation(name: "EmployeeAppointments")
+  reviews              Review[]
+  ownedSalons          Salon[]       @relation("SalonOwner")
+  salons               Salon[]       @relation("EmployeeSalon")
+  schedules            Schedule[]
+  UserSalon            UserSalon[]
 
   @@map("user")
 }
 
-model UserImage {
-  userId   Int    @id @map("user_id")
-  image    Bytes
-  mimetype String @db.VarChar(255)
-  user     User   @relation(fields: [userId], references: [id])
+model Salon {
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(255)
+  description  String?       @db.VarChar(1000)
+  address      String        @db.VarChar(255)
+  ownerId      Int
+  owner        User          @relation(fields: [ownerId], references: [id], name: "SalonOwner")
+  employees    User[]        @relation("EmployeeSalon")
+  services     Service[]
+  appointments Appointment[]
+  reviews      Review[]
+  promotions   Promotion[]
+  analytics    Analytics[]
+  salonImages  SalonImage[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deleted      Boolean       @default(false)
+  UserSalon    UserSalon[]
 
-  @@map("user_image")
+  @@map("salon")
 }
 
-model Pricelist {
-  id             Int             @id @default(autoincrement())
-  name           String?         @db.VarChar(255)
-  description    String?         @db.VarChar(1000)
-  startDate      DateTime?
-  endDate        DateTime?
-  createdAt      DateTime        @default(now()) @map("created_at")
-  servicePrices  PriceService[]
-  shippingPrices PriceShipping[]
+model Service {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(255)
+  price         Float
+  duration      Int // Duration in minutes
+  categoryId    Int
+  category      Category       @relation(fields: [categoryId], references: [id])
+  salonId       Int
+  salon         Salon          @relation(fields: [salonId], references: [id])
+  appointments  Appointment[]
+  promotions    Promotion[]
+  serviceImages ServiceImage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deleted       Boolean        @default(false)
 
-  @@map("price_list")
+  @@map("service")
 }
 
-enum ServiceType {
-  IMAGE
-  MESSAGE
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(255)
+  services Service[]
+
+  @@map("category")
 }
 
-model PriceService {
-  id           Int         @id @default(autoincrement())
-  price        Decimal     @db.Decimal(10, 2)
-  fromQuantity Int         @map("from_quantity")
-  toQuantity   Int?        @map("to_quantity")
-  serviceType  ServiceType @map("service_type")
-  description  String?     @db.VarChar(1000)
-  createdAt    DateTime    @default(now()) @map("created_at")
-  priceListId  Int         @map("price_list_id")
-  priceList    Pricelist   @relation(fields: [priceListId], references: [id])
+model Appointment {
+  id         Int               @id @default(autoincrement())
+  userId     Int
+  serviceId  Int
+  salonId    Int
+  employeeId Int?
+  date       DateTime
+  startTime  DateTime
+  endTime    DateTime
+  status     AppointmentStatus
+  notes      String?           @db.VarChar(1000)
+  user       User              @relation(name: "UserAppointments", fields: [userId], references: [id])
+  service    Service           @relation(fields: [serviceId], references: [id])
+  salon      Salon             @relation(fields: [salonId], references: [id])
+  employee   User?             @relation(name: "EmployeeAppointments", fields: [employeeId], references: [id])
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
-  @@map("price_service")
+  @@map("appointment")
 }
 
-model Shipping {
-  id          Int     @id @default(autoincrement())
-  name        String  @db.VarChar(255)
-  description String? @db.VarChar(1000)
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  salonId   Int
+  rating    Int // Rating scale (e.g., 1-5)
+  comment   String?  @db.VarChar(1000)
+  visitDate DateTime
+  user      User     @relation(fields: [userId], references: [id])
+  salon     Salon    @relation(fields: [salonId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  PriceShipping PriceShipping[]
-  @@map("shipping")
+  @@map("review")
 }
 
-model PriceShipping {
-  price       Decimal   @db.Decimal(10, 2)
-  shippingId  Int       @map("shipping_id")
-  shipping    Shipping  @relation(fields: [shippingId], references: [id])
-  priceListId Int       @map("price_list_id")
-  priceList   Pricelist @relation(fields: [priceListId], references: [id])
+model Promotion {
+  id          Int      @id @default(autoincrement())
+  salonId     Int?
+  serviceId   Int?
+  description String?  @db.VarChar(1000)
+  startDate   DateTime
+  endDate     DateTime
+  discount    Float // Discount percentage
+  salon       Salon?   @relation(fields: [salonId], references: [id])
+  service     Service? @relation(fields: [serviceId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@id([priceListId, shippingId])
-  @@map("price_shipping")
+  @@map("promotion")
+}
+
+model Analytics {
+  id                Int      @id @default(autoincrement())
+  salonId           Int
+  date              DateTime
+  appointmentsCount Int
+  newClientsCount   Int
+  popularServices   Json // JSON object for storing popular services data
+  revenue           Float // Total revenue for the day
+  salon             Salon    @relation(fields: [salonId], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("analytics")
+}
+
+model Schedule {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  dayOfWeek Int // 0 = Sunday, 1 = Monday, etc.
+  startTime DateTime
+  endTime   DateTime
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("schedule")
+}
+
+model SalonImage {
+  id       Int    @id @default(autoincrement())
+  salonId  Int
+  imageUrl String @db.VarChar(255)
+  salon    Salon  @relation(fields: [salonId], references: [id])
+
+  @@map("salon_image")
+}
+
+model ServiceImage {
+  id        Int     @id @default(autoincrement())
+  serviceId Int
+  imageUrl  String  @db.VarChar(255)
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@map("service_image")
+}
+
+model UserSalon {
+  userId  Int
+  salonId Int
+  user    User  @relation(fields: [userId], references: [id])
+  salon   Salon @relation(fields: [salonId], references: [id])
+
+  @@id([userId, salonId])
 }

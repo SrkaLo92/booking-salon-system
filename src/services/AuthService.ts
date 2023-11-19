@@ -15,7 +15,7 @@ export default class AuthService {
     constructor(private userRepository: UserRepository) {}
 
     public async SignUp(userDTO: UserRegisterDTO): Promise<void> {
-        const { password, confirmPassword, ...userInfo } = userDTO;
+        const { password, confirmPassword, role = "USER", ...userInfo } = userDTO;
         if (password !== confirmPassword) throw new ValidationError('Password and confirm password are not same!');
 
         const [existsUserErr] = await to(this.checkIsEmailUnique(userInfo.email));
@@ -24,7 +24,7 @@ export default class AuthService {
         const [hashErr, hashedPassword] = await to(hashPassword(password));
         if (hashErr) throw hashErr;
 
-        const user: UserInsert = { ...userInfo, passwordHash: hashedPassword };
+        const user: UserInsert = { ...userInfo, passwordHash: hashedPassword, role };
 
         const [createUserErr] = await to(this.userRepository.createUser(user));
         if (createUserErr) throw createUserErr;
@@ -47,10 +47,12 @@ export default class AuthService {
             id: token.id,
             name: token.name,
             email: token.email,
+            role: token.role,
+            phoneNumber: token.phoneNumber
         };
     }
 
-    public async editUser(userId: number, userSave: UserSave): Promise<void> {
+    public async editUser(userId: number, userSave: UserSave, p: any): Promise<void> {
         const { password, ...userInfo } = userSave;
 
         const [findUserErr, existingUser] = await to(this.userRepository.findUserById(userId));
@@ -77,6 +79,8 @@ export default class AuthService {
             id: userId,
             name: user.name,
             email: user.email,
+            role: user.role,
+            phoneNumber: user.phoneNumber
         };
 
         return this.generateToken(updatedUser);
@@ -97,9 +101,12 @@ export default class AuthService {
             id: user.id, // We are gonna use this in the middleware 'isAuth'
             name: user.name,
             email: user.email,
+            role: user.role,
+            phoneNumber: user.phoneNumber,
             exp: exp.getTime() / 1000,
             iss: config.domain,
         };
+
         return jwt.sign(jwtData, config.jwt.secret);
     }
 

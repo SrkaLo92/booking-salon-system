@@ -29,14 +29,14 @@ export default class UserRepository {
 
     findUserByEmail(email: string): Promise<UserSelectWithPassword> {
         return this.prisma.user.findFirst({
-            select: { ...selectColumns, passwordHash: true },
+            select: { ...selectColumns, passwordHash: true, role: true },
             where: { email: email, deleted: false },
         });
     }
 
     findUserById(id: number): Promise<UserSelect> {
         return this.prisma.user.findFirst({
-            select: { id: true, name: true, email: true, createdAt: true, updatedAt: true },
+            select: { id: true, name: true, email: true, createdAt: true, updatedAt: true, role: true },
             where: { id, deleted: false },
         });
     }
