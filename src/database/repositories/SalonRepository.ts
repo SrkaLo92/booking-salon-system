@@ -4,6 +4,7 @@ import { SalonInsert, SalonSelect, SalonUpdate } from "../../interfaces/Salon";
 import { UserLoad } from "../../interfaces/User";
 import NotFoundError from "../../util/errors/NotFoundError";
 import UnauthorizedError from "../../util/errors/ValidationError";
+import { Salon } from ".prisma/client";
 
 const selectedColumns = { id: true, name: true, description: true, address: true, createdAt: true, updatedAt: true };
 
@@ -11,7 +12,7 @@ const selectedColumns = { id: true, name: true, description: true, address: true
 export default class SalonRepository {
   constructor(@Inject("db") private prisma: PrismaClient) {}
 
-  createSalon(salon: SalonInsert, user: UserLoad): Promise<void> {
+  createSalon(salon: SalonInsert, user: UserLoad): Promise<Salon> {
     return this.prisma.salon
       .create({
       select: null,
@@ -19,9 +20,6 @@ export default class SalonRepository {
         name: salon.name,
         description: salon.description,
         address: salon.address,
-        latitude: salon.latitude,
-        longitude: salon.longitude,
-        openingHours: salon.openingHours,
         owner: {
           connect: {
             id: user.id

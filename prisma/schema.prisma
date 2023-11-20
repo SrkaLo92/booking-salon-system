@@ -43,23 +43,23 @@ model User {
 }
 
 model Salon {
-  id           Int           @id @default(autoincrement())
-  name         String        @db.VarChar(255)
-  description  String?       @db.VarChar(1000)
-  address      String        @db.VarChar(255)
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  description  String?        @db.VarChar(1000)
+  address      String         @db.VarChar(255)
   ownerId      Int
-  owner        User          @relation(fields: [ownerId], references: [id], name: "SalonOwner")
-  employees    User[]        @relation("EmployeeSalon")
-  services     Service[]
+  owner        User           @relation(fields: [ownerId], references: [id], name: "SalonOwner")
+  employees    User[]         @relation("EmployeeSalon")
   appointments Appointment[]
   reviews      Review[]
   promotions   Promotion[]
   analytics    Analytics[]
   salonImages  SalonImage[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  deleted      Boolean       @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deleted      Boolean        @default(false)
   UserSalon    UserSalon[]
+  SalonService SalonService[]
 
   @@map("salon")
 }
@@ -68,17 +68,16 @@ model Service {
   id            Int            @id @default(autoincrement())
   name          String         @db.VarChar(255)
   price         Float
-  duration      Int // Duration in minutes
+  duration      Int
   categoryId    Int
   category      Category       @relation(fields: [categoryId], references: [id])
-  salonId       Int
-  salon         Salon          @relation(fields: [salonId], references: [id])
   appointments  Appointment[]
   promotions    Promotion[]
   serviceImages ServiceImage[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deleted       Boolean        @default(false)
+  SalonService  SalonService[]
 
   @@map("service")
 }
@@ -87,6 +86,7 @@ model Category {
   id       Int       @id @default(autoincrement())
   name     String    @db.VarChar(255)
   services Service[]
+  deleted  Boolean   @default(false)
 
   @@map("category")
 }
@@ -194,4 +194,13 @@ model UserSalon {
   salon   Salon @relation(fields: [salonId], references: [id])
 
   @@id([userId, salonId])
+}
+
+model SalonService {
+  salonId   Int
+  serviceId Int
+  salon     Salon   @relation(fields: [salonId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@id([salonId, serviceId])
 }
